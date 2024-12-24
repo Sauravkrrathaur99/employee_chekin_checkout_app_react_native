@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { AppState, Image, StyleSheet, View, Text, Dimensions, ScrollView, PermissionsAndroid } from 'react-native';
+import { useColorScheme , AppState, Image, StyleSheet, View, Text, Dimensions, ScrollView, PermissionsAndroid } from 'react-native';
 import { MaterialCommunityIcons } from 'react-native-vector-icons'; // For timer icon
 import NetInfo from '@react-native-community/netinfo';
 import { useRouter } from 'expo-router';
 
-const username = 'Saurav Kumar Rathaur';
+// const username = 'Saurav Kumar Rathaur';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const requestPermission = async () => {
@@ -30,7 +30,10 @@ export default function HomeScreen() {
   const [networkType, setNetworkType] = useState('');
   const [appState, setAppState] = useState(AppState.currentState);
   const [ssid, setSsid] = useState('');
+  const scheme = useColorScheme(); // Get the current theme (light or dark)
   const router = useRouter();
+  // console.log("screen color scheme", scheme)
+
 
   // Define the handleAppStateChange function
   const handleAppStateChange = (nextAppState) => {
@@ -45,6 +48,7 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
+  
     // Request permission on mount (only for Android)
     requestPermission();
     // Listen for changes in app state (foreground/background)
@@ -125,9 +129,9 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView style={[styles.container, scheme === 'dark' && styles.lightBackground]}>
       <View style={styles.topSection}>
-        <Text style={styles.headerText}>Welcome, {username}</Text>
+        <Text style={styles.headerText}>Welcome, Saurav Rathaur</Text>
         <Image
           source={require('@/assets/images/image_checkincheckout_home.png')}
           style={styles.reactLogo}
@@ -178,6 +182,12 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  darkBackground: {
+    backgroundColor: '#121212', // Dark background color
+  },
+  lightBackground: {
+    backgroundColor: '#ECECEC', // Light background color
   },
   topSection: {
     height: screenHeight * 0.30,
