@@ -3,24 +3,43 @@ import { useColorScheme , AppState, Image, StyleSheet, View, Text, Dimensions, S
 import { MaterialCommunityIcons } from 'react-native-vector-icons'; // For timer icon
 import NetInfo from '@react-native-community/netinfo';
 import { useRouter } from 'expo-router';
+import * as Location from 'expo-location';
 
 // const username = 'Saurav Kumar Rathaur';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+// const requestPermission = async () => {
+//   try {
+//     const granted = await PermissionsAndroid.request(
+//       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+//     );
+//     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+//       console.log('Location permission granted');
+      
+//     } else {
+//       console.log('Location permission denied');
+//     }
+//   } catch (err) {
+//     console.warn(err);
+//   }
+// };
+
+
 const requestPermission = async () => {
-  try {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-    );
-    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-      console.log('Location permission granted');
-    } else {
-      console.log('Location permission denied');
-    }
-  } catch (err) {
-    console.warn(err);
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  if (status !== 'granted') {
+    console.log('Permission to access location was denied');
+    return false; // Permission Denied
   }
+  return true; // Permission Granted
+
+  // Fetch the location details
+  let location = await Location.getCurrentPositionAsync({});
+  console.log('Location:', location);
 };
+
+
+
 
 export default function HomeScreen() {
   const [workTime, setWorkTime] = useState(0);
@@ -35,69 +54,149 @@ export default function HomeScreen() {
   // console.log("screen color scheme", scheme)
 
 
-  // Define the handleAppStateChange function
-  const handleAppStateChange = (nextAppState) => {
-    if (nextAppState === 'active') {
-      console.log('App is in foreground');
-    } else if (nextAppState === 'background') {
-      console.log('App is in the background');
-      // Log the network connectivity status when the app goes into the background
-      console.log('Network connectivity status');
+  // // Define the handleAppStateChange function
+  // const handleAppStateChange = (nextAppState) => {
+  //   if (nextAppState === 'active') {
+  //     console.log('App is in foreground');
+  //   } else if (nextAppState === 'background') {
+  //     console.log('App is in the background');
+  //     // Log the network connectivity status when the app goes into the background
+  //     console.log('Network connectivity status');
+  //   }
+  //   setAppState(nextAppState);
+  // };
+
+  // Fetch Network Info
+const fetchNetworkInfo = async () => {
+  console.log('fetchNetworkInfo called');
+  const state = await NetInfo.fetch(); // Fetch current network info
+  setIsConnected(state.isConnected);
+  setNetworkType(state.type);
+
+  if (state.isConnected && state.type === 'wifi') {
+    const ssid = state.details?.ssid; // Ensure SSID exists
+    console.log('SSID in fetchNetworkInfo:', ssid);
+    setSsid(ssid || ''); // Set SSID immediately
+  } else {
+    console.log('SSID in fetchNetworkInfo else part');
+    setSsid('');
+  }
+  setIsConnecting(!state.isConnected);
+};
+
+
+// App State Change Handler
+const handleAppStateChange = async (nextAppState) => {
+  if (appState.match(/inactive|background/) && nextAppState === 'active') {
+    // App Resumed - Re-check permissions and network
+    const permissionGranted = await requestPermission();
+    if (permissionGranted) {
+      fetchNetworkInfo();
     }
-    setAppState(nextAppState);
-  };
+  }
+  setAppState(nextAppState);
+};
 
-  useEffect(() => {
-  
-    // Request permission on mount (only for Android)
-    requestPermission();
-    // Listen for changes in app state (foreground/background)
-    const appStateListener = AppState.addEventListener('change', handleAppStateChange);
 
+  // useEffect(() => {
+    
+  //   // Request permission on mount (only for Android)
+  //   requestPermission();
+  //   fetchNetworkInfo(); // Fetch network info during mount
+   
+
+  //   const interval = setInterval(() => {
+  //     setWorkTime((prev) => prev + 1);
+  //   }, 1000);
+
+  //   const getCurrentDate = () => {
+  //     const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+  //     const date = new Date().toLocaleDateString('en-US', options);
+  //     setCurrentDate(date);
+  //   };
+
+  //   getCurrentDate();
+
+  //   // Network Connectivity
+  //   const unsubscribe = NetInfo.addEventListener(state => {
+  //     console.log("fetched state details ",state); // Log the entire state object to check for available properties
+  //     setIsConnected(state.isConnected);
+  //     setNetworkType(state.type);
+
+  //     // If connected to WiFi, fetch the SSID
+  //     if (state.isConnected && state.type === 'wifi') {
+  //       const ssid = state.details.ssid;
+  //       console.log("ssid fetceed", ssid);
+  //       setSsid(ssid || ''); // Set SSID immediately if available
+  //     } else {
+  //       setSsid('');
+  //     }
+    
+  //     setIsConnecting(!state.isConnected);
+  //   });
+
+  //    // Listen for changes in app state (foreground/background)
+  //    const appStateListener = AppState.addEventListener('change', handleAppStateChange);
+
+  //   return () => {
+  //     clearInterval(interval);
+  //     unsubscribe();
+  //     appStateListener.remove(); // Clean up the app state listener
+  //   };
+  // }, [appState]);
+
+
+// useEffect Hook
+useEffect(() => {
+  const initializeApp = async () => {
+    // Request Permission on Mount
+    const permissionGranted = await requestPermission();
+    if (permissionGranted) {
+      fetchNetworkInfo(); // Fetch network info if permissions are granted
+    }
+
+    // Timer for Work Time Tracking
     const interval = setInterval(() => {
       setWorkTime((prev) => prev + 1);
     }, 1000);
 
+    // Get Current Date
     const getCurrentDate = () => {
       const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
       const date = new Date().toLocaleDateString('en-US', options);
       setCurrentDate(date);
     };
-
     getCurrentDate();
 
-    // Network Connectivity
+    // Network Connectivity Listener
     const unsubscribe = NetInfo.addEventListener(state => {
-      console.log(state); // Log the entire state object to check for available properties
+      console.log('Fetched State Details:', state);
       setIsConnected(state.isConnected);
       setNetworkType(state.type);
 
-      // If connected to WiFi, fetch the SSID
       if (state.isConnected && state.type === 'wifi') {
-        // Try to fetch SSID
-        const ssid = state.details.ssid;
-        if (ssid) {
-          setSsid(ssid); // Set SSID if available
-        } else {
-          setSsid(''); // Show if SSID is not available
-        }
+        const ssid = state.details?.ssid;
+        console.log('SSID fetched in listener:', ssid);
+        setSsid(ssid || ''); // Update SSID immediately if available
       } else {
-        setSsid(''); // Clear SSID when not connected to WiFi
+        setSsid('');
       }
-      // Track network disconnection and reconnection
-      if (!state.isConnected) {
-        setIsConnecting(true);  // Network lost, show "Connecting..."
-      } else {
-        setIsConnecting(false);  // Network is back, stop showing "Connecting..."
-      }
+      setIsConnecting(!state.isConnected);
     });
+
+    // Listen for App State Changes
+    const appStateListener = AppState.addEventListener('change', handleAppStateChange);
 
     return () => {
       clearInterval(interval);
       unsubscribe();
-      appStateListener.remove(); // Clean up the app state listener
+      appStateListener.remove();
     };
-  }, [appState]);
+  };
+
+  initializeApp(); // Call the initialization function
+}, [appState]);
+
 
   // Match SSID to custom text
   const getConnectionText = () => {

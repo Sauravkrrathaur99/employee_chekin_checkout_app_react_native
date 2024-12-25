@@ -404,6 +404,12 @@
 // });
 
 
+
+
+
+
+
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ImageBackground, Image } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
@@ -411,10 +417,11 @@ import { makeRedirectUri, useAuthRequest, exchangeCodeAsync } from 'expo-auth-se
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 // Microsoft App Details
 const clientId = '68a4e767-34b2-41e5-b4c7-59578dae21b8';
 const tenantId = '1de61f46-fc12-4067-ab1d-147eb7e21025';
-const redirectUri = 'exp://192.168.29.101:8081';
+const redirectUri = 'exp://192.168.1.13:8081';
 
 // Discovery Endpoint
 const discovery = {
